@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Video CSAI Flow (Client-Side Ad Insertion)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 40px;
+            background: linear-gradient(90deg, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            font-size: 2em;
+            margin: 30px 0 20px;
+            color: #ffa500;
+        }
+        
+        h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        h4 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            margin-top: 15px;
+        }
+        
+        .flow-stage {
+            margin-bottom: 30px;
+        }
+        
+        .flow-box {
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .purple-box { background: linear-gradient(135deg, #6a0dad 0%, #4b0082 100%); }
+        .blue-box { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }
+        .green-box { background: linear-gradient(135deg, #065f46 0%, #047857 100%); }
+        .cyan-box { background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%); }
+        .indigo-box { background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%); }
+        .red-box { background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%); }
+        .orange-box { background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%); }
+        
+        .box-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .box-title {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .box-subtitle {
+            opacity: 0.9;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+        
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        ul li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        ul li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        ol {
+            padding-left: 25px;
+        }
+        
+        ol li {
+            margin: 8px 0;
+        }
+        
+        .arrow-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .arrow {
+            display: inline-block;
+            font-size: 2em;
+            color: #00d4ff;
+        }
+        
+        .arrow-label {
+            display: inline-block;
+            background: #1e40af;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        
+        .arrow-dashed {
+            color: #ffa500;
+        }
+        
+        .arrow-label-dashed {
+            background: #c2410c;
+        }
+        
+        .marker-indicator {
+            background: #fbbf24;
+            color: #000;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        
+        .info-box {
+            background: rgba(234, 88, 12, 0.2);
+            border: 2px solid #ea580c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .warning-box {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .client-side-section {
+            border: 4px solid #ffa500;
+            border-radius: 16px;
+            padding: 30px;
+            background: rgba(31, 41, 55, 0.8);
+            margin: 30px 0;
+        }
+        
+        .comparison-section {
+            background: rgba(31, 41, 55, 0.9);
+            border: 2px solid #ffa500;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .hybrid-section {
+            background: linear-gradient(135deg, #1e3a8a 0%, #6a0dad 100%);
+            border: 2px solid #a855f7;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .checkmark { color: #10b981; }
+        .crossmark { color: #ef4444; }
+        
+        strong {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Video CSAI Workflow (Client-Side Ad Insertion)</h1>
+        
+        <!-- Stage 1 -->
+        <div class="flow-stage">
+            <div class="flow-box purple-box">
+                <div class="box-header">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+                    <span class="box-title">1. Video Source</span>
+                </div>
+                <div class="box-subtitle">Live encoder/camera</div>
+                <ul>
+                    <li>Camera/Encoder</li>
+                    <li>Hardware: Teradek, LiveU, Tricaster</li>
+                    <li>Software: OBS, vMix, Wirecast</li>
+                </ul>
+            </div>
+            <div class="arrow-container">
+                <span class="arrow">↓</span>
+                <span class="arrow-label">RTMP/SRT Stream</span>
+            </div>
+        </div>
+        
+        <!-- Stage 2 -->
+        <div class="flow-stage">
+            <div class="flow-box blue-box">
+                <div class="box-header">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    <span class="box-title">2. Ingest & Transcoding</span>
+                </div>
+                <div class="box-subtitle">AWS MediaLive / Wowza</div>
+                <ul>
+                    <li>Receives RTMP input stream</li>
+                    <li>Creates ABR ladder (multiple bitrates)</li>
+                    <li>Example: 1080p, 720p, 480p, 360p</li>
+                    <li>Encodes to H.264/HEVC + AAC</li>
+                </ul>
+                <div class="marker-indicator">
+                    ⚡ SCTE-35 / ID3 MARKER INSERTION
+                </div>
+                <div class="info-box">
+                    <strong>Marker Insertion for CSAI:</strong><br>
+                    • SCTE-35 markers in transport stream<br>
+                    • ID3 timed metadata tags in HLS<br>
+                    • Custom cue points in manifest<br>
+                    • Markers signal ad opportunity to client
+                </div>
+            </div>
+            <div class="arrow-container">
+                <span class="arrow">↓</span>
+                <span class="arrow-label">HLS/DASH with Markers</span>
+            </div>
+        </div>
+        
+        <!-- Stage 3 -->
+        <div class="flow-stage">
+            <div class="flow-box green-box">
+                <div class="box-header">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    <span class="box-title">3. Origin/Packaging</span>
+                </div>
+                <div class="box-subtitle">AWS MediaPackage / Wowza</div>
+                <ul>
+                    <li>Packages stream into HLS/DASH</li>
+                    <li>Embeds SCTE-35 as ID3 tags or #EXT-X-CUE</li>
+                    <li>Content stream only (NO ads yet)</li>
+                    <li>Provides DVR/time-shift capability</li>
+                </ul>
+                <div class="code-block">
+#EXT-X-CUE-OUT:DURATION=120<br>
+#EXT-X-CUE-IN<br>
+or ID3 PRIV tag in segments
+                </div>
+            </div>
+            <div class="arrow-container">
+                <span class="arrow">↓</span>
+                <span class="arrow-label">Content Stream + Ad Markers</span>
+            </div>
+        </div>
+        
+        <!-- Stage 4 -->
+        <div class="flow-stage">
+            <div class="flow-box cyan-box">
+                <div class="box-header">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <span class="box-title">4. CDN Distribution</span>
+                </div>
+                <div class="box-subtitle">CloudFront / Akamai / Fastly</div>
+                <ul>
+                    <li>Caches content stream segments</li>
+                    <li>Delivers SAME stream to ALL viewers</li>
+                    <li>No personalization at CDN level</li>
+                    <li>High cache efficiency</li>
+                </ul>
+            </div>
+            <div class="arrow-container">
+                <span class="arrow">↓</span>
+                <span class="arrow-label">HLS Manifest + Segments</span>
+            </div>
+        </div>
+        
+        <!-- Stage 5 - Client Side -->
+        <div class="client-side-section">
+            <h2 style="text-align: center; margin-bottom: 30px;">CLIENT-SIDE AD INSERTION HAPPENS HERE</h2>
+            
+            <div class="grid-2">
+                <div class="flow-box indigo-box">
+                    <div class="box-header">
+                        <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                        <span class="box-title">5A. CTV/OTT Player</span>
+                    </div>
+                    <div class="box-subtitle">Roku RAF / Apple TV / Samsung</div>
+                    <ul>
+                        <li>Video player with ad SDK integrated</li>
+                        <li>Parses HLS manifest for cue points</li>
+                        <li>Detects ID3 tags or #EXT-X-CUE markers</li>
+                        <li>PAUSES content stream when marker detected</li>
+                        <li>Requests ad from Ad Decision Server</li>
+                    </ul>
+                </div>
+                
+                <div class="flow-box red-box">
+                    <div class="box-header">
+                        <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        <span class="box-title">5B. Ad SDK / Client Library</span>
+                    </div>
+                    <div class="box-subtitle">IMA SDK / Roku RAF / FreeWheel SDK</div>
+                    <ul>
+                        <li>Google IMA SDK (most common)</li>
+                        <li>Roku Advertising Framework (RAF)</li>
+                        <li>FreeWheel client SDK</li>
+                        <li>Handles ad request + playback logic</li>
+                        <li>Fires tracking beacons</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="arrow-container">
+                <span class="arrow arrow-dashed">↓</span>
+                <span class="arrow-label arrow-label-dashed">Ad Request with User Data</span>
+            </div>
+            
+            <div class="flow-box orange-box">
+                <div class="box-header">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    <span class="box-title">5C. Ad Decision Server</span>
+                </div>
+                <div class="box-subtitle">Google Ad Manager / FreeWheel</div>
+                <ul>
+                    <li>Receives ad request from player</li>
+                    <li>User device info, location, demographics</li>
+                    <li>Decides which ads to serve</li>
+                    <li>Returns VAST/VMAP XML response</li>
+                    <li>Contains ad video URLs + tracking pixels</li>
+                </ul>
+            </div>
+            
+            <div class="arrow-container">
+                <span class="arrow arrow-dashed">↓</span>
+                <span class="arrow-label arrow-label-dashed">VAST/VMAP Response (Ad URLs)</span>
+            </div>
+            
+            <div class="flow-box purple-box">
+                <div class="box-header">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                    <span class="box-title">5D. Ad Playback</span>
+                </div>
+                <div class="box-subtitle">Player switches to ad content</div>
+                <ul>
+                    <li>Player downloads ad video from ad CDN</li>
+                    <li>SWITCHES video source from content to ad</li>
+                    <li>Plays ad(s) for specified duration</li>
+                    <li>Fires tracking events (start, quartiles, complete)</li>
+                    <li>After ads complete, RESUMES content stream</li>
+                </ul>
+                <div class="warning-box">
+                    ⚠️ <strong>Visible transition:</strong> There may be buffering/black frames when switching between content and ads
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <h3>Key Differences: CSAI vs SSAI</h3>
+            <div class="grid-2">
+                <div>
+                    <h4 style="color: #ef4444;">CSAI Characteristics:</h4>
+                    <ul>
+                        <li><span class="checkmark">✓</span> Same content stream for all viewers</li>
+                        <li><span class="checkmark">✓</span> Better CDN cache efficiency</li>
+                        <li><span class="checkmark">✓</span> Lower infrastructure costs</li>
+                        <li><span class="checkmark">✓</span> Personalized ads per viewer</li>
+                        <li><span class="crossmark">✗</span> Ads can be blocked (ad blockers)</li>
+                        <li><span class="crossmark">✗</span> Visible buffering during transitions</li>
+                        <li><span class="crossmark">✗</span> Requires robust client SDK</li>
+                        <li><span class="crossmark">✗</span> More complex player implementation</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #10b981;">SSAI Characteristics:</h4>
+                    <ul>
+                        <li><span class="checkmark">✓</span> Seamless ad insertion (no buffering)</li>
+                        <li><span class="checkmark">✓</span> Ad-blocker proof</li>
+                        <li><span class="checkmark">✓</span> Simpler player implementation</li>
+                        <li><span class="checkmark">✓</span> Better user experience</li>
+                        <li><span class="crossmark">✗</span> Unique stream per viewer (CDN impact)</li>
+                        <li><span class="crossmark">✗</span> Higher infrastructure costs</li>
+                        <li><span class="crossmark">✗</span> More complex server architecture</li>
+                        <li><span class="crossmark">✗</span> Potential latency added</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical Implementation -->
+        <div class="comparison-section">
+            <h3>CSAI Technical Implementation</h3>
+            
+            <h4 style="color: #60a5fa;">Marker Formats for CSAI:</h4>
+            <div class="code-block">
+# HLS with #EXT-X-CUE<br>
+#EXT-X-CUE-OUT:DURATION=120,ID="ad-break-1"<br>
+#EXTINF:6.0<br>
+segment001.ts<br>
+#EXT-X-CUE-IN<br><br>
+
+# Or ID3 PRIV tags embedded in segments<br>
+ID3 PRIV owner="www.scte.org"<br>
+Binary SCTE-35 data in segment
+            </div>
+            
+            <h4 style="color: #a78bfa;">Player Flow:</h4>
+            <ol>
+                <li>Player parses manifest, detects cue point at timestamp T</li>
+                <li>At time T-2s (pre-roll buffer), player makes ad request</li>
+                <li>Ad SDK requests VAST from ad server with device/user info</li>
+                <li>Ad server responds with ad creative URLs</li>
+                <li>At time T, player pauses content stream</li>
+                <li>Player loads and plays ad(s) from separate URL</li>
+                <li>Player fires tracking beacons (impression, quartiles)</li>
+                <li>After ad(s) complete, player resumes content stream</li>
+            </ol>
+            
+            <h4 style="color: #10b981;">Popular CSAI SDKs by Platform:</h4>
+            <div class="grid-2">
+                <ul>
+                    <li><strong>Roku:</strong> RAF (Roku Advertising Framework)</li>
+                    <li><strong>Apple TV:</strong> Google IMA SDK for tvOS</li>
+                    <li><strong>Android TV:</strong> Google IMA SDK / ExoPlayer IMA</li>
+                </ul>
+                <ul>
+                    <li><strong>Fire TV:</strong> Google IMA SDK / Amazon TAM</li>
+                    <li><strong>Samsung Tizen:</strong> Google IMA SDK HTML5</li>
+                    <li><strong>LG webOS:</strong> Google IMA SDK HTML5</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Use Cases -->
+        <div class="comparison-section">
+            <h3>When to Use CSAI vs SSAI</h3>
+            <div class="grid-2">
+                <div style="background: rgba(5, 150, 105, 0.2); padding: 20px; border-radius: 8px;">
+                    <h4>Use CSAI When:</h4>
+                    <ul>
+                        <li>Budget-conscious operation</li>
+                        <li>Moderate scale (thousands of viewers)</li>
+                        <li>Can tolerate slight buffering</li>
+                        <li>Need quick time-to-market</li>
+                        <li>Platform SDKs are robust (Roku, Apple TV)</li>
+                        <li>Ad blocking isn't a major concern</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(234, 88, 12, 0.2); padding: 20px; border-radius: 8px;">
+                    <h4>Use SSAI When:</h4>
+                    <ul>
+                        <li>Premium viewing experience required</li>
+                        <li>Large scale (millions of viewers)</li>
+                        <li>Must prevent ad blocking</li>
+                        <li>Live sports or news (seamless experience)</li>
+                        <li>Have budget for infrastructure</li>
+                        <li>Need DVR with ads intact</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hybrid Approach -->
+        <div class="hybrid-section">
+            <h3>💡 Hybrid Approach (Best of Both)</h3>
+            <p style="margin-bottom: 15px;">Some platforms use a hybrid model:</p>
+            <ul>
+                <li><strong>SSAI for premium content:</strong> Live sports, breaking news, premium shows</li>
+                <li><strong>CSAI for standard content:</strong> VOD catalog, user-generated content</li>
+                <li><strong>Device-dependent:</strong> SSAI for web browsers (ad blocking risk), CSAI for CTV apps (trusted environment)</li>
+                <li>Start with CSAI for MVP, migrate to SSAI as you scale and revenue justifies it</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
